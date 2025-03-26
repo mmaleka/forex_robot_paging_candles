@@ -5,9 +5,41 @@ import matplotlib.pyplot as plt
 import pandas as pd
 import datetime
 import numpy as np
+import json
+import os
 
 from forex import close_trades_by_crossover
 from paging_candles import sell_conditions, buy_conditions
+
+
+
+# Function to check if a pair has an active SELL trade for today
+def has_today_trade(symbol, trade_type):
+    """
+    Checks if a trade (BUY/SELL) exists for the given symbol today.
+    :param symbol: The currency pair to check (e.g., "EURUSD").
+    :param trade_type: 0 for BUY, 1 for SELL.
+    :return: True if a trade exists, otherwise False.
+    """
+    today = datetime.datetime.now()
+    start_time = today.replace(hour=0, minute=0, second=0, microsecond=0)
+    end_time = today.replace(hour=23, minute=59, second=59, microsecond=999999)
+
+    # Get all trades for today
+    trades = mt5.history_deals_get(start_time, end_time)
+
+    if trades is None or len(trades) == 0:
+        return False  # No trades for today
+
+    # Check if a trade exists for the symbol and type (BUY/SELL)
+    for trade in trades:
+        if trade.symbol == symbol and trade.type == trade_type:
+            return True  # Found a trade
+
+    return False  # No trade found
+
+
+
 
 
 def get_forex_data(symbol, timeframe):
@@ -101,33 +133,40 @@ def check_signal(df, symbol, volume, stop_loss_adjust, timeframe, tp):
         print("The DataFrame is empty.")
     else:
         last_crossover = df.iloc[-1]['cross_over']
-
+        
 
         if last_crossover == "down":
 
-            try:
-                # Find the last "up" crossover
-                last_up_index = df[df["cross_over"] == "up"].index[-1]
-                # Find the first "down" crossover
-                down_after_up = df.loc[last_up_index:].query("cross_over == 'up'").head(1).index[-1]
-                # Firstly close all exisiting trades and pending trades
-                close_trades_by_crossover(last_crossover, symbol, tp)
+            if has_today_trade(symbol, 1):
+                print(f"🚫 Trade already placed for {symbol}, skipping...")
+            else:
+                print(f"🟢 No {symbol} trade found for today, looking for trade...")
 
-                symbol_info = mt5.symbol_info(symbol)
-                if symbol_info:
-                    print(f"Min lot: {symbol_info.volume_min}")
-                    # volume = symbol_info.volume_min
-                    # print(f"Max lot: {symbol_info.volume_max}")
-                    # print(f"Lot step: {symbol_info.volume_step}")
-                else:
-                    print("Symbol not found. Make sure it's correct and available.")
+                try:
+                    # Find the last "up" crossover
+                    last_up_index = df[df["cross_over"] == "up"].index[-1]
+                    # Find the first "down" crossover
+                    down_after_up = df.loc[last_up_index:].query("cross_over == 'up'").head(1).index[-1]
+                    # Firstly close all exisiting trades and pending trades
+                    close_trades_by_crossover(last_crossover, symbol, tp)
+
+                    symbol_info = mt5.symbol_info(symbol)
+                    if symbol_info:
+                        print(f"Min lot: {symbol_info.volume_min}")
+                        # volume = symbol_info.volume_min
+                        # print(f"Max lot: {symbol_info.volume_max}")
+                        # print(f"Lot step: {symbol_info.volume_step}")
+                    else:
+                        print("Symbol not found. Make sure it's correct and available.")
 
 
-                # # Check all the sell conditions
-                sell_conditions(df, symbol, volume, stop_loss_adjust, down_after_up, tp)
-            except Exception as e:
-                # By this way we can know about the type of error occurring
-                print("The error is: ",e)
+                    # Check all the sell conditions and return true if trade has been placed
+                    sell_conditions(df, symbol, volume, stop_loss_adjust, down_after_up, tp)
+                    
+
+                except Exception as e:
+                    # By this way we can know about the type of error occurring
+                    print("The error is: ",e)
 
         elif  last_crossover == "up":
 

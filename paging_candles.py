@@ -28,7 +28,7 @@ def condition_2(symbol, df_2, stop_loss_adjust, cross_over_date, volume, cross_o
                (df_2.iloc[i-1]["close"] > df_2.iloc[i-2]["low"]):
             
             df_2.loc[df_2.index[i-1], "condition2_sell"] = True  # Set to True if conditions are met
-            df_2.loc[df_2.index[i-1], "stop_loss"] = df_2.iloc[i-2]["high"]
+            df_2.loc[df_2.index[i-1], "stop_loss"] = df_2.iloc[i-3]["high"]
             df_2.loc[df_2.index[i-1], "tp"] = df_2.iloc[i-3]["low"]-stop_loss_adjust
             df_2.loc[df_2.index[i-1], "pending_order"] = df_2.iloc[i-3]["low"]
     
@@ -149,7 +149,7 @@ def condition_2_2(symbol, df, stop_loss_adjust, cross_over_date, volume, cross_o
                (df_22.iloc[i-1]["close"] < df_22.iloc[i-2]["low"]):
                 
                 df_22.loc[df_22.index[i-1], "condition2_2_sell"] = True  # Set to True if conditions are met
-                df_22.loc[df_22.index[i-1], "stop_loss"] = df_22.iloc[i-2]["high"]
+                df_22.loc[df_22.index[i-1], "stop_loss"] = df_22.iloc[i-3]["high"]
                 df_22.loc[df_22.index[i-1], "tp"] = df_22.iloc[i-1]["low"]-stop_loss_adjust
                 df_22.loc[df_22.index[i-1], "sell_order"] = df_22.iloc[i-1]["close"]
         
@@ -205,11 +205,15 @@ def sell_conditions(df, symbol, volume, stop_loss_adjust, cross_over_date, tp):
 
     cross_over_type = 'down'
 
+    # check if a trade has been placed for the pair on this day
+    # check_pair_trade_today(cro)
+
     condition_2(symbol, df_2, stop_loss_adjust, cross_over_date,volume, cross_over_type, tp, order_type='sell_stop')
 
     condition_3(symbol, df_2, stop_loss_adjust, cross_over_date,volume, cross_over_type, tp, order_type='sell_stop')
     
     condition_2_2(symbol, df, stop_loss_adjust, cross_over_date,volume, cross_over_type, tp, order_type='sell')
+
 
     
         
