@@ -118,7 +118,6 @@ def close_trades_by_crossover(last_crossover, symbol, tp):
         print("No open trades or connection issue.")
     
     for trade in trades_open:
-        print("trade.type: ", mt5.ORDER_TYPE_BUY, trade.type, last_crossover, trade.symbol)
 
         # Close the trade is the profit reaches 2 dollars
         close_trade_if_profit(trade, tp)

@@ -12,15 +12,7 @@ from forex import *
 
 
 def condition_2(symbol, df_2, stop_loss_adjust, cross_over_date, volume, cross_over_type, tp, order_type):
-
-    # Get current price data
-    tick_info = mt5.symbol_info_tick(symbol)
-
-    if tick_info:
-        current_price = tick_info.bid  # or tick_info.ask depending on your logic
-        print(f"Current {symbol} Price: {current_price}")
-    else:
-        print(f"Failed to get price for {symbol}")
+    print("conditin_2")
 
     # Apply the condition to all rows except the first two (to prevent index errors)
     for i in range(2, len(df_2)):
@@ -32,6 +24,7 @@ def condition_2(symbol, df_2, stop_loss_adjust, cross_over_date, volume, cross_o
                 
                 df_2.loc[df_2.index[i-1], "stop_loss"] = df_2.iloc[i-3]["high"]
                 df_2.loc[df_2.index[i-1], "pending_order"] = df_2.iloc[i-2]["low"]
+                df_2.loc[df_2.index[i-1], "condition2_sell"] = True  # Set to True if conditions are met
 
 
 
@@ -42,13 +35,16 @@ def condition_2(symbol, df_2, stop_loss_adjust, cross_over_date, volume, cross_o
                 
                 df_2.loc[df_2.index[i-1], "stop_loss"] = df_2.iloc[i-3]["low"]
                 df_2.loc[df_2.index[i-1], "pending_order"] = df_2.iloc[i-2]["high"]
+                df_2.loc[df_2.index[i-1], "condition2_sell"] = True  # Set to True if conditions are met
 
     
-
+    
+    
+    
     df_2.loc[df_2.index[i-1], "tp"] = df_2.iloc[i-3]["low"]-stop_loss_adjust
-    df_2.loc[df_2.index[i-1], "condition2_sell"] = True  # Set to True if conditions are met
     df_2['condition1_sell'] = df_2['condition1_sell'].shift(1)
     df_2['non_touching'] = df_2['non_touching'].shift(1)
+    
 
 
 
@@ -63,6 +59,7 @@ def condition_2(symbol, df_2, stop_loss_adjust, cross_over_date, volume, cross_o
             (df_2['condition2_sell'] == True)  &
             (df_2['condition3_sell'] == False) 
         ]
+        
         
         # Example: Set stop loss at the high price
         # Display the filtered DataFrame
@@ -87,6 +84,7 @@ def condition_2(symbol, df_2, stop_loss_adjust, cross_over_date, volume, cross_o
             
                         
 def condition_3(symbol, df_2, stop_loss_adjust, cross_over_date, volume, cross_over_type, tp, order_type):
+    print("conditin_3")
 
     # CONDITION 3
     df_3 = df_2.copy()
@@ -108,6 +106,7 @@ def condition_3(symbol, df_2, stop_loss_adjust, cross_over_date, volume, cross_o
                     
                     df_3.loc[df_3.index[i-1], "stop_loss"] = df_3.iloc[i-4]["high"]
                     df_3.loc[df_3.index[i-1], "pending_order"] = df_3.iloc[i-3]["low"]
+                    df_3.loc[df_3.index[i-1], "condition3_sell"] = True  # Set to True if conditions are met
                 
         elif cross_over_type == "up":
             for i in range(2, len(df_3)):
@@ -119,14 +118,16 @@ def condition_3(symbol, df_2, stop_loss_adjust, cross_over_date, volume, cross_o
 
                     df_3.loc[df_3.index[i-1], "stop_loss"] = df_3.iloc[i-4]["low"]
                     df_3.loc[df_3.index[i-1], "pending_order"] = df_3.iloc[i-3]["high"]
+                    df_3.loc[df_3.index[i-1], "condition3_sell"] = True  # Set to True if conditions are met
 
 
-        df_3.loc[df_3.index[i-1], "condition3_sell"] = True  # Set to True if conditions are met
+        
         df_3.loc[df_3.index[i-1], "tp"] = df_3.iloc[i-3]["low"]-stop_loss_adjust
         df_3['condition2_sell'] = df_3['condition2_sell'].shift(1)
         df_3['condition1_sell'] = df_3['condition1_sell'].shift(1)
         df_3['non_touching'] = df_3['non_touching'].shift(1)
-        
+
+
         
         # Filter for CONDITIONV 3
         filtered_df3 = df_3[
@@ -136,6 +137,7 @@ def condition_3(symbol, df_2, stop_loss_adjust, cross_over_date, volume, cross_o
             # (df_3['condition2_sell'] == False) & 
             (df_3['condition3_sell'] == True)
         ]
+
         
         if len(filtered_df3) >= 1:
             print("cross_over_date: ", cross_over_date)
@@ -160,6 +162,7 @@ def condition_3(symbol, df_2, stop_loss_adjust, cross_over_date, volume, cross_o
     
 
 def condition_2_2(symbol, df, stop_loss_adjust, cross_over_date, volume, cross_over_type, tp, order_type):
+    print("conditin_2_2")
 
     # CONDITION 2.2
     df_22 = df.copy()
@@ -178,6 +181,7 @@ def condition_2_2(symbol, df, stop_loss_adjust, cross_over_date, volume, cross_o
                     
                     df_22.loc[df_22.index[i-1], "stop_loss"] = df_22.iloc[i-3]["high"]
                     df_22.loc[df_22.index[i-1], "sell_order"] = df_22.iloc[i-1]["close"]
+                    df_22.loc[df_22.index[i-1], "condition2_2_sell"] = True  # Set to True if conditions are met
 
             elif cross_over_type == "up":
                 if  (df_22.iloc[i-1]["low"] < df_22.iloc[i-2]["low"]) and \
@@ -185,14 +189,13 @@ def condition_2_2(symbol, df, stop_loss_adjust, cross_over_date, volume, cross_o
                     
                     df_22.loc[df_22.index[i-1], "stop_loss"] = df_22.iloc[i-3]["low"]
                     df_22.loc[df_22.index[i-1], "sell_order"] = df_22.iloc[i-1]["close"]
+                    df_22.loc[df_22.index[i-1], "condition2_2_sell"] = True  # Set to True if conditions are met
         
         
 
         df_22.loc[df_22.index[i-1], "tp"] = df_22.iloc[i-1]["low"]-stop_loss_adjust
-        df_22.loc[df_22.index[i-1], "condition2_2_sell"] = True  # Set to True if conditions are met
         df_22['condition1_sell'] = df_22['condition1_sell'].shift(1)
         df_22['non_touching'] = df_22['non_touching'].shift(1)
-        df_22.tail(20)
         
         
         # Filter for CONDITIONV 2_2
@@ -267,6 +270,7 @@ def buy_conditions(df, symbol, volume, stop_loss_adjust, cross_over_date, tp):
     df_2['pending_order']=0.0
 
     cross_over_type = 'up'
+
 
     condition_2(symbol, df_2, stop_loss_adjust, cross_over_date,volume, cross_over_type, tp, order_type='buy_stop')
 

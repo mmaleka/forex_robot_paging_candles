@@ -56,7 +56,7 @@ def get_forex_data(symbol, timeframe):
     end_date = datetime.datetime.now()
 
     # Get the date 5 days ago
-    start_date = end_date - datetime.timedelta(hours=36)
+    start_date = end_date - datetime.timedelta(hours=24)
 
     # # Define the start and end date
     # start_date = datetime.datetime(2025, 2, 7, 8, 0)  # Adjust the date and time as needed
@@ -118,15 +118,12 @@ def check_signal(df, symbol, volume, stop_loss_adjust, timeframe, tp):
 
     df["condition1_sell"] = False  # Initialize the column with False
 
-    # Apply the condition to all rows except the first two (to prevent index errors)
-    for i in range(2, len(df)):
-        if (df.iloc[i-1]["low"] < df.iloc[i-2]["low"]) and \
-           (df.iloc[i-1]["close"] < df.iloc[i-2]["high"]) and \
-           (df.iloc[i-1]["close"] > df.iloc[i-2]["low"]):
-            df.loc[df.index[i-1], "condition1_sell"] = True  # Set to True if conditions are met
 
+
+
+    
     print(f"timeframe {timeframe}")
-    print("df: \n", df.tail(5))
+    print("df before shifting: \n", df.tail(5))
     
 
     # Check if DataFrame is empty
@@ -136,7 +133,14 @@ def check_signal(df, symbol, volume, stop_loss_adjust, timeframe, tp):
         last_crossover = df.iloc[-1]['cross_over']
         
 
-        if last_crossover == "down2":
+        if last_crossover == "down":
+
+            # Apply the condition to all rows except the first two (to prevent index errors)
+            for i in range(2, len(df)):
+                if (df.iloc[i-1]["low"] < df.iloc[i-2]["low"]) and \
+                (df.iloc[i-1]["close"] < df.iloc[i-2]["high"]) and \
+                (df.iloc[i-1]["close"] > df.iloc[i-2]["low"]):
+                    df.loc[df.index[i-1], "condition1_sell"] = True  # Set to True if conditions are met
 
             if has_today_trade(symbol, 1):
                 print(f"🚫 Trade already placed for {symbol}, skipping...")
@@ -170,6 +174,14 @@ def check_signal(df, symbol, volume, stop_loss_adjust, timeframe, tp):
                     print("The error is: ",e)
 
         elif  last_crossover == "up":
+                
+            # Apply the condition to all rows except the first two (to prevent index errors)
+            for i in range(2, len(df)):
+                if (df.iloc[i-1]["high"] > df.iloc[i-2]["high"]) and \
+                (df.iloc[i-1]["close"] > df.iloc[i-2]["low"]) and \
+                (df.iloc[i-1]["close"] < df.iloc[i-2]["high"]):
+                    df.loc[df.index[i-1], "condition1_sell"] = True  # Set to True if conditions are met
+
 
             if has_today_trade(symbol, 0):
                 print(f"🚫 Trade already placed for {symbol}, skipping...")

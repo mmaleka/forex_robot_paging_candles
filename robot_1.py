@@ -46,6 +46,7 @@ timeframe = mt5.TIMEFRAME_M5
 while True:
     # loop through each pair to find a trade
     for pair in currency_pairs:
+        print("###########################################################################################################")
         print(pair, currency_pairs[pair]['volume'], currency_pairs[pair]['stop_loss_adjust'], currency_pairs[pair]['tp'])
 
         # # now loop through each time frame
