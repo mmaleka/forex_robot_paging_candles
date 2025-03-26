@@ -31,9 +31,10 @@ def has_today_trade(symbol, trade_type):
     if trades is None or len(trades) == 0:
         return False  # No trades for today
 
-    # Check if a trade exists for the symbol and type (BUY/SELL)
     for trade in trades:
-        if trade.symbol == symbol and trade.type == trade_type:
+        # print("trade.comment[:2]: ", trade.comment[:2])
+        if trade.symbol == symbol and trade.type == trade_type and trade.comment != "Closing due to c" and trade.reason != 4:
+            print("trade already placed: ", trade)
             return True  # Found a trade
 
     return False  # No trade found
@@ -135,7 +136,7 @@ def check_signal(df, symbol, volume, stop_loss_adjust, timeframe, tp):
         last_crossover = df.iloc[-1]['cross_over']
         
 
-        if last_crossover == "down":
+        if last_crossover == "down2":
 
             if has_today_trade(symbol, 1):
                 print(f"🚫 Trade already placed for {symbol}, skipping...")
@@ -170,30 +171,35 @@ def check_signal(df, symbol, volume, stop_loss_adjust, timeframe, tp):
 
         elif  last_crossover == "up":
 
-            try:
-                # Find the last "down" crossover
-                last_down_index = df[df["cross_over"] == "down"].index[-1]
-                # Find the first "down" crossover
-                up_after_down = df.loc[last_down_index:].query("cross_over == 'down'").head(1).index[-1]
-                # Firstly close all exisiting trades and pending trades
-                close_trades_by_crossover(last_crossover, symbol, tp)
-                # Check all the buy conditions
+            if has_today_trade(symbol, 0):
+                print(f"🚫 Trade already placed for {symbol}, skipping...")
+            else:
+                print(f"🟢 No {symbol} trade found for today, looking for trade...")
 
-                symbol_info = mt5.symbol_info(symbol)
-                if symbol_info:
-                    print(f"Min lot: {symbol_info.volume_min}")
-                    # print(f"Max lot: {symbol_info.volume_max}")
-                    # print(f"Lot step: {symbol_info.volume_step}")
-                else:
-                    print("Symbol not found. Make sure it's correct and available.")
+                try:
+                    # Find the last "down" crossover
+                    last_down_index = df[df["cross_over"] == "down"].index[-1]
+                    # Find the first "down" crossover
+                    up_after_down = df.loc[last_down_index:].query("cross_over == 'down'").head(1).index[-1]
+                    # Firstly close all exisiting trades and pending trades
+                    close_trades_by_crossover(last_crossover, symbol, tp)
+                    # Check all the buy conditions
+
+                    symbol_info = mt5.symbol_info(symbol)
+                    if symbol_info:
+                        print(f"Min lot: {symbol_info.volume_min}")
+                        # print(f"Max lot: {symbol_info.volume_max}")
+                        # print(f"Lot step: {symbol_info.volume_step}")
+                    else:
+                        print("Symbol not found. Make sure it's correct and available.")
 
 
-                # # Check all the sell conditions
-                # buy_conditions(df, symbol, symbol_info.volume_min, stop_loss_adjust, up_after_down, tp)
+                    # # Check all the sell conditions
+                    buy_conditions(df, symbol, volume, stop_loss_adjust, up_after_down, tp)
 
-            except Exception as e:
-                # By this way we can know about the type of error occurring
-                print("The error is: ",e)
+                except Exception as e:
+                    # By this way we can know about the type of error occurring
+                    print("The error is: ",e)
 
 
 
