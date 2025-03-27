@@ -17,25 +17,27 @@ from forex import get_account_info
 
 # List all the pairs to monitor-
 
+    # "Volatility 50 Index": {"volume": 4.0, "stop_loss_adjust": 2000, "tp": 2.0}, #done tp = 10 #
 currency_pairs = {
-    "Volatility 10 Index": {"volume": 0.5, "stop_loss_adjust": 2000, "tp": 1.0}, #done tp = 5 #
-    "Volatility 25 Index": {"volume": 0.5, "stop_loss_adjust": 2000, "tp": 1.0}, #done tp = 3 #
-    "Volatility 50 Index": {"volume": 4.0, "stop_loss_adjust": 2000, "tp": 1.0}, #done tp = 10 #
-    "Volatility 75 Index": {"volume": 0.005, "stop_loss_adjust": 1000, "tp": 1.0}, #done tp = 5 #
-    "Volatility 100 Index": {"volume": 0.5, "stop_loss_adjust": 2000 , "tp": 1.0},  #done tp = 5 #
-    "Volatility 10 (1s) Index": {"volume": 0.5, "stop_loss_adjust": 2000, "tp": 1.0}, #done tp = 5 #
-    "Volatility 25 (1s) Index": {"volume": 0.005, "stop_loss_adjust": 2000, "tp": 1.0},#done tp = 10 #
-    "Volatility 50 (1s) Index": {"volume": 0.005, "stop_loss_adjust": 2000, "tp": 1.0},#done tp = 10 #
-    "Volatility 75 (1s) Index": {"volume": 0.001, "stop_loss_adjust": 2000, "tp": 1.0}, #done tp = 2 #
-    "Volatility 100 (1s) Index": {"volume": 0.5, "stop_loss_adjust": 2000, "tp": 1.0}, #done tp = 2 #
-    "Volatility 150 (1s) Index": {"volume": 0.05, "stop_loss_adjust": 2000, "tp": 1.0}, #done tp = 5 #
-    "Jump 10 Index": {"volume": 0.05, "stop_loss_adjust": 2000, "tp": 1.0}, #done tp = 3 #
-    "Jump 100 Index": {"volume": 0.05, "stop_loss_adjust": 2000, "tp": 1.}, #done tp = 1 #
-    "Jump 75 Index": {"volume": 0.05, "stop_loss_adjust": 2000, "tp": 1.0}, #done tp = 1 #
-    "Drift Switch Index 30": {"volume": 0.2, "stop_loss_adjust": 2000, "tp": 1.0}, #done tp = 1 #
-    "Drift Switch Index 20": {"volume": 0.2, "stop_loss_adjust": 2000, "tp": 1.0}, #done tp = 1 #
-    "Drift Switch Index 10": {"volume": 0.2, "stop_loss_adjust": 2000, "tp": 1.0}, #done tp = 1 #
-    "Step Index": {"volume": 0.1, "stop_loss_adjust": 2000, "tp": 1.0}, #done tp = 5 #
+    # "Volatility 10 Index": {"volume": 0.5, "stop_loss_adjust": 2000, "tp": 2.0}, #done tp = 5 #
+    "Volatility 25 Index": {"volume": 0.5, "stop_loss_adjust": 2000, "tp": 2.0}, #done tp = 3 #
+
+    "Volatility 75 Index": {"volume": 0.005, "stop_loss_adjust": 1000, "tp": 2.0}, #done tp = 5 #
+    "Volatility 100 Index": {"volume": 0.5, "stop_loss_adjust": 2000 , "tp": 2.0},  #done tp = 5 #
+    "Volatility 10 (1s) Index": {"volume": 0.5, "stop_loss_adjust": 2000, "tp": 2.0}, #done tp = 5 #
+    "Volatility 25 (1s) Index": {"volume": 0.005, "stop_loss_adjust": 2000, "tp": 2.0},#done tp = 10 #
+    # "Volatility 50 (1s) Index": {"volume": 0.
+    # 005, "stop_loss_adjust": 2000, "tp": 2.0},#done tp = 10 #
+    "Volatility 75 (1s) Index": {"volume": 0.05, "stop_loss_adjust": 2000, "tp": 2.0}, #done tp = 2 #
+    "Volatility 100 (1s) Index": {"volume": 0.5, "stop_loss_adjust": 2000, "tp": 2.0}, #done tp = 2 #
+    "Volatility 150 (1s) Index": {"volume": 0.05, "stop_loss_adjust": 2000, "tp": 2.0}, #done tp = 5 #
+    # "Jump 10 Index": {"volume": 0.05, "stop_loss_adjust": 2000, "tp": 2.0}, #done tp = 3 #
+    "Jump 100 Index": {"volume": 0.05, "stop_loss_adjust": 2000, "tp": 2.0}, #done tp = 1 #
+    "Jump 75 Index": {"volume": 0.05, "stop_loss_adjust": 2000, "tp": 2.0}, #done tp = 1 #
+    "Drift Switch Index 30": {"volume": 0.2, "stop_loss_adjust": 2000, "tp": 2.0}, #done tp = 1 #
+    "Drift Switch Index 20": {"volume": 0.2, "stop_loss_adjust": 2000, "tp": 2.0}, #done tp = 1 #
+    "Drift Switch Index 10": {"volume": 0.2, "stop_loss_adjust": 2000, "tp": 2.0}, #done tp = 1 #
+    "Step Index": {"volume": 0.1, "stop_loss_adjust": 2000, "tp": 2.0}, #done tp = 5 #
 }
 
 

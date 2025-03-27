@@ -24,6 +24,7 @@ def condition_2(symbol, df_2, stop_loss_adjust, cross_over_date, volume, cross_o
                 
                 df_2.loc[df_2.index[i-1], "stop_loss"] = df_2.iloc[i-3]["high"]
                 df_2.loc[df_2.index[i-1], "pending_order"] = df_2.iloc[i-2]["low"]
+                df_2.loc[df_2.index[i-1], "take_profit"] = df_2.iloc[i-1]["pending_order"] - (df_2.iloc[i-1]["stop_loss"] - df_2.iloc[i-1]["pending_order"])
                 df_2.loc[df_2.index[i-1], "condition2_sell"] = True  # Set to True if conditions are met
 
 
@@ -34,7 +35,9 @@ def condition_2(symbol, df_2, stop_loss_adjust, cross_over_date, volume, cross_o
                 (df_2.iloc[i-1]["close"] < df_2.iloc[i-2]["high"]):
                 
                 df_2.loc[df_2.index[i-1], "stop_loss"] = df_2.iloc[i-3]["low"]
+                df_2.loc[df_2.index[i-1], "take_profit"] = df_2.iloc[i-3]["low"]
                 df_2.loc[df_2.index[i-1], "pending_order"] = df_2.iloc[i-2]["high"]
+                df_2.loc[df_2.index[i-1], "take_profit"] = df_2.iloc[i-1]["pending_order"] + (df_2.iloc[i-1]["pending_order"] - df_2.iloc[i-1]["stop_loss"])
                 df_2.loc[df_2.index[i-1], "condition2_sell"] = True  # Set to True if conditions are met
 
     
@@ -59,8 +62,9 @@ def condition_2(symbol, df_2, stop_loss_adjust, cross_over_date, volume, cross_o
             (df_2['condition2_sell'] == True)  &
             (df_2['condition3_sell'] == False) 
         ]
-        
-        
+
+
+    
         # Example: Set stop loss at the high price
         # Display the filtered DataFrame
         if len(filtered_df2) >= 1:
@@ -74,7 +78,7 @@ def condition_2(symbol, df_2, stop_loss_adjust, cross_over_date, volume, cross_o
                 order_type = order_type
                 pending_order_price=float(filtered_df2.iloc[-1]["pending_order"])
                 sl = filtered_df2.iloc[-1]["stop_loss"]
-                # tp = filtered_df2.iloc[-1]["tp"]
+                tp = filtered_df2.iloc[-1]["take_profit"]
 
                 if check_existing_sell_stop(symbol, pending_order_price):
                     print(f"❌ A {order_type} trade is already open for {symbol}. Skipping new see stop trade.")
@@ -106,6 +110,7 @@ def condition_3(symbol, df_2, stop_loss_adjust, cross_over_date, volume, cross_o
                     
                     df_3.loc[df_3.index[i-1], "stop_loss"] = df_3.iloc[i-4]["high"]
                     df_3.loc[df_3.index[i-1], "pending_order"] = df_3.iloc[i-3]["low"]
+                    df_3.loc[df_3.index[i-1], "take_profit"] = df_3.iloc[i-1]["pending_order"] - (df_3.iloc[i-1]["stop_loss"] - df_3.iloc[i-1]["pending_order"])
                     df_3.loc[df_3.index[i-1], "condition3_sell"] = True  # Set to True if conditions are met
                 
         elif cross_over_type == "up":
@@ -118,6 +123,7 @@ def condition_3(symbol, df_2, stop_loss_adjust, cross_over_date, volume, cross_o
 
                     df_3.loc[df_3.index[i-1], "stop_loss"] = df_3.iloc[i-4]["low"]
                     df_3.loc[df_3.index[i-1], "pending_order"] = df_3.iloc[i-3]["high"]
+                    df_3.loc[df_3.index[i-1], "take_profit"] = df_3.iloc[i-1]["pending_order"] + (df_3.iloc[i-1]["pending_order"] - df_3.iloc[i-1]["stop_loss"])
                     df_3.loc[df_3.index[i-1], "condition3_sell"] = True  # Set to True if conditions are met
 
 
@@ -149,7 +155,7 @@ def condition_3(symbol, df_2, stop_loss_adjust, cross_over_date, volume, cross_o
                 order_type = order_type
                 price=float(filtered_df3.iloc[-1]["pending_order"])
                 sl = filtered_df3.iloc[-1]["stop_loss"]
-                # tp = filtered_df3.iloc[-1]["tp"]
+                tp = filtered_df3.iloc[-1]["take_profit"]
 
                 if check_existing_sell_stop(symbol, price):
                     print(f"❌ A {order_type} trade is already open for {symbol}. Skipping new see stop trade.")
@@ -181,6 +187,7 @@ def condition_2_2(symbol, df, stop_loss_adjust, cross_over_date, volume, cross_o
                     
                     df_22.loc[df_22.index[i-1], "stop_loss"] = df_22.iloc[i-3]["high"]
                     df_22.loc[df_22.index[i-1], "sell_order"] = df_22.iloc[i-1]["close"]
+                    df_22.loc[df_22.index[i-1], "take_profit"] = df_22.iloc[i-1]["sell_order"] - (df_22.iloc[i-1]["stop_loss"] - df_22.iloc[i-1]["sell_order"])
                     df_22.loc[df_22.index[i-1], "condition2_2_sell"] = True  # Set to True if conditions are met
 
             elif cross_over_type == "up":
@@ -189,6 +196,7 @@ def condition_2_2(symbol, df, stop_loss_adjust, cross_over_date, volume, cross_o
                     
                     df_22.loc[df_22.index[i-1], "stop_loss"] = df_22.iloc[i-3]["low"]
                     df_22.loc[df_22.index[i-1], "sell_order"] = df_22.iloc[i-1]["close"]
+                    df_22.loc[df_22.index[i-1], "take_profit"] = df_22.iloc[i-1]["sell_order"] + (df_22.iloc[i-1]["sell_order"] - df_22.iloc[i-1]["stop_loss"])
                     df_22.loc[df_22.index[i-1], "condition2_2_sell"] = True  # Set to True if conditions are met
         
         
@@ -216,7 +224,7 @@ def condition_2_2(symbol, df, stop_loss_adjust, cross_over_date, volume, cross_o
                 order_type = order_type
                 price=float(filtered_df22.iloc[-1]["sell_order"])
                 sl = filtered_df22.iloc[-1]["stop_loss"]
-                # tp = filtered_df22.iloc[-1]["tp"]
+                tp = filtered_df22.iloc[-1]["take_profit"]
 
                 if check_existing_sell_stop(symbol, price):
                     print(f"❌ A {order_type} trade is already open for {symbol}. Skipping new see stop trade.")

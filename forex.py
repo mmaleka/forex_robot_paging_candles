@@ -39,7 +39,7 @@ def place_pending_order(symbol, volume, order_type, price, stop_loss_price, take
             "price": float(price),         # price at which order is pending
             "type": order_type_mt5,   # pending order type (buy if price moves upward)
             "sl": stop_loss_price,
-            # "tp": take_profit_price, 
+            "tp": take_profit_price, 
             "deviation": 10,
             "magic": 123456,
             "comment": comment ,
@@ -78,7 +78,7 @@ def place_order(symbol, volume, order_type, price, stop_loss_price, take_profit_
             # "price": float(price),         # price 
             "type": order_type_mt5,   # pending order type (buy if price moves upward)
             "sl": stop_loss_price,
-            # "tp": take_profit_price, 
+            "tp": take_profit_price, 
             "deviation": 10,
             "magic": 123456,
             "comment": comment,
@@ -120,7 +120,10 @@ def close_trades_by_crossover(last_crossover, symbol, tp):
     for trade in trades_open:
 
         # Close the trade is the profit reaches 2 dollars
-        close_trade_if_profit(trade, tp)
+        # close_trade_if_profit(trade, tp)
+        print("close trade by profit commeneted")
+
+
 
         # # Determine trade type to close
         # if last_crossover == "down" and trade.type == mt5.ORDER_TYPE_BUY and symbol == trade.symbol:

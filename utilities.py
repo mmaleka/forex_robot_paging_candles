@@ -13,6 +13,97 @@ from paging_candles import sell_conditions, buy_conditions
 
 
 
+
+def should_place_order(symbol, cross_over_date):
+    """
+    Checks if a new order should be placed based on the last trade date.
+
+    :param symbol: The trading pair (e.g., "Volatility 75 Index")
+    :param cross_over_date: The last crossover date (datetime object)
+    :return: True if a new order should be placed, otherwise False
+    """
+    # Define time range to get previous orders
+    end_time = datetime.datetime.now()
+    start_time = end_time - datetime.timedelta(days=30)  # Adjust as needed
+
+    # Retrieve trade history from MT5
+    trades = mt5.history_deals_get(start_time, end_time)
+
+    if trades is None or len(trades) == 0:
+        print("No previous trades found. Placing new order.")
+        return True
+
+    # Filter trades for the given symbol
+    symbol_trades = [trade for trade in trades if trade.symbol == symbol]
+
+    if not symbol_trades:
+        print("No previous trades for this symbol. Placing new order.")
+        return True
+
+    # Get the last trade date
+    last_trade_date = max(trade.time for trade in symbol_trades)
+    last_trade_date = datetime.datetime.fromtimestamp(last_trade_date)
+
+    # Check if the crossover date is after the last trade date
+    if last_trade_date < cross_over_date:
+        print("Place order or pending order on new order date.")
+        return True
+    else:
+        print("No new order needed.")
+        return False
+
+
+
+
+
+def get_consecutive_losses(symbol):
+    """
+    Returns the number of consecutive losses for a given symbol in the trade DataFrame.
+    
+    :param df: DataFrame containing trade history
+    :param symbol: The trading pair (e.g., "Volatility 75 Index")
+    :return: Tuple of (is_last_trade_loss, consecutive_losses)
+    """
+
+    now = datetime.datetime.now()
+    start_time = now - datetime.timedelta(hours=24)
+    
+    # Get trade history for the last X hours
+    trades = mt5.history_deals_get(start_time, now)
+    df = pd.DataFrame(list(trades), columns=trades[0]._asdict().keys())
+    # Convert 'time' to a readable datetime format
+    df["time"] = pd.to_datetime(df["time"], unit="s")
+    df_non_zero_profit = df[df['profit'] != 0]
+    df_non_zero_profit['result'] = df_non_zero_profit['profit'].apply(lambda x: 'win' if x > 0 else 'loss')
+
+    # df_symbol_trades = df_non_zero_profit[df_non_zero_profit['symbol'] == symbol]
+    df_symbol_trades = df_non_zero_profit
+
+    if not df_symbol_trades.empty:
+        # Get the last trade
+        last_trade = df_symbol_trades.iloc[-1]
+        print("last_trade['result']: ", last_trade['result'])
+        
+        # Check if the last trade was a loss
+        is_last_trade_loss = last_trade['result'] == 'loss'
+        
+        # Count consecutive losses
+        consecutive_losses = 0
+        for i in range(len(df_symbol_trades) - 1, -1, -1):
+            if df_symbol_trades.iloc[i]['result'] == 'loss':
+                consecutive_losses += 1
+            else:
+                break  # Stop when a win is found
+        
+        return is_last_trade_loss, consecutive_losses
+    else:
+        print(f"No trades found for {symbol}.")
+        return False, 0
+
+
+
+
+
 # Function to check if a pair has an active SELL trade for today
 def has_today_trade(symbol, trade_type):
     """
@@ -38,6 +129,33 @@ def has_today_trade(symbol, trade_type):
             return True  # Found a trade
 
     return False  # No trade found
+
+
+
+def has_recent_trade(symbol, trade_type, hours=0.001):
+    """
+    Checks if a trade (BUY/SELL) exists for the given symbol in the last X hours.
+    :param symbol: The currency pair to check (e.g., "EURUSD").
+    :param trade_type: 0 for BUY, 1 for SELL.
+    :param hours: The number of hours to check (default is 1 hour).
+    :return: True if a trade exists, otherwise False.
+    """
+    now = datetime.datetime.now()
+    start_time = now - datetime.timedelta(hours=hours)
+    
+    # Get trade history for the last X hours
+    trades = mt5.history_deals_get(start_time, now)
+
+    if trades is None or len(trades) == 0:
+        return False  # No trades in the last X hours
+
+    for trade in trades:
+        if trade.symbol == symbol and trade.type == trade_type and trade.comment != "Closing due to c" and trade.reason != 4:
+            print("Trade already placed: ", trade)
+            return True  # Found a trade in the last X hours
+
+    return False  # No trade found
+
 
 
 
@@ -135,6 +253,8 @@ def check_signal(df, symbol, volume, stop_loss_adjust, timeframe, tp):
 
         if last_crossover == "down":
 
+
+
             # Apply the condition to all rows except the first two (to prevent index errors)
             for i in range(2, len(df)):
                 if (df.iloc[i-1]["low"] < df.iloc[i-2]["low"]) and \
@@ -142,16 +262,32 @@ def check_signal(df, symbol, volume, stop_loss_adjust, timeframe, tp):
                 (df.iloc[i-1]["close"] > df.iloc[i-2]["low"]):
                     df.loc[df.index[i-1], "condition1_sell"] = True  # Set to True if conditions are met
 
-            if has_today_trade(symbol, 1):
-                print(f"🚫 Trade already placed for {symbol}, skipping...")
-            else:
-                print(f"🟢 No {symbol} trade found for today, looking for trade...")
 
-                try:
-                    # Find the last "up" crossover
-                    last_up_index = df[df["cross_over"] == "up"].index[-1]
-                    # Find the first "down" crossover
-                    down_after_up = df.loc[last_up_index:].query("cross_over == 'up'").head(1).index[-1]
+
+
+            # # if has_today_trade(symbol, 1):
+            # if has_recent_trade(symbol, 1, hours=1):
+            #     print(f"🚫 Trade already placed for {symbol}, skipping...")
+            # else:
+            #     print(f"🟢 No {symbol} trade found for today, looking for trade...")
+
+            # Example usage:
+            is_last_trade_loss, consecutive_losses = get_consecutive_losses(symbol)
+            if consecutive_losses <= 5:
+                if is_last_trade_loss == True:
+                    volume = consecutive_losses*volume*2
+            
+
+
+            try:
+                # Find the last "up" crossover
+                last_up_index = df[df["cross_over"] == "up"].index[-1]
+                # Find the first "down" crossover
+                down_after_up = df.loc[last_up_index:].query("cross_over == 'up'").head(1).index[-1]
+                if should_place_order(symbol, down_after_up):
+                    print(f"🟢 No {symbol} trade found for today, looking for trade...")
+
+
                     # Firstly close all exisiting trades and pending trades
                     close_trades_by_crossover(last_crossover, symbol, tp)
 
@@ -166,12 +302,16 @@ def check_signal(df, symbol, volume, stop_loss_adjust, timeframe, tp):
 
 
                     # Check all the sell conditions and return true if trade has been placed
+                    
+                    
                     sell_conditions(df, symbol, volume, stop_loss_adjust, down_after_up, tp)
+                else:
+                    print(f"🚫 Trade already placed for {symbol}, skipping...")
                     
 
-                except Exception as e:
-                    # By this way we can know about the type of error occurring
-                    print("The error is: ",e)
+            except Exception as e:
+                # By this way we can know about the type of error occurring
+                print("The error is: ",e)
 
         elif  last_crossover == "up":
                 
@@ -183,16 +323,33 @@ def check_signal(df, symbol, volume, stop_loss_adjust, timeframe, tp):
                     df.loc[df.index[i-1], "condition1_sell"] = True  # Set to True if conditions are met
 
 
-            if has_today_trade(symbol, 0):
-                print(f"🚫 Trade already placed for {symbol}, skipping...")
-            else:
-                print(f"🟢 No {symbol} trade found for today, looking for trade...")
 
-                try:
-                    # Find the last "down" crossover
-                    last_down_index = df[df["cross_over"] == "down"].index[-1]
-                    # Find the first "down" crossover
-                    up_after_down = df.loc[last_down_index:].query("cross_over == 'down'").head(1).index[-1]
+            
+
+            # # if has_today_trade(symbol, 0):
+            # if has_recent_trade(symbol, 0, hours=1):
+            #     print(f"🚫 Trade already placed for {symbol}, skipping...")
+            # else:
+            #     print(f"🟢 No {symbol} trade found for today, looking for trade...")
+
+            # Example usage:
+            is_last_trade_loss, consecutive_losses = get_consecutive_losses(symbol)
+            if consecutive_losses <= 5:
+                if is_last_trade_loss == True:
+                    volume = consecutive_losses*volume*2
+
+
+
+            
+
+            try:
+                # Find the last "down" crossover
+                last_down_index = df[df["cross_over"] == "down"].index[-1]
+                # Find the first "down" crossover
+                up_after_down = df.loc[last_down_index:].query("cross_over == 'down'").head(1).index[-1]
+                if should_place_order(symbol, down_after_up):
+                    print(f"🟢 No {symbol} trade found for today, looking for trade...")
+
                     # Firstly close all exisiting trades and pending trades
                     close_trades_by_crossover(last_crossover, symbol, tp)
                     # Check all the buy conditions
@@ -208,10 +365,13 @@ def check_signal(df, symbol, volume, stop_loss_adjust, timeframe, tp):
 
                     # # Check all the sell conditions
                     buy_conditions(df, symbol, volume, stop_loss_adjust, up_after_down, tp)
+                
+                else:
+                    print(f"🚫 Trade already placed for {symbol}, skipping...")
 
-                except Exception as e:
-                    # By this way we can know about the type of error occurring
-                    print("The error is: ",e)
+            except Exception as e:
+                # By this way we can know about the type of error occurring
+                print("The error is: ",e)
 
 
 
